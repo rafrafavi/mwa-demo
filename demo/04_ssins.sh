@@ -33,6 +33,7 @@ fi
 # DEMO: use SSINS (sky-subtracted incoherent noise spectra) to identify RFI
 # - top plots are baseline-averaged auto amplitudes, differenced in time
 # - bottom plots are z-score: (subtract mean of each frequency, divide by std dev)
+set -x
 python "${SCRIPT_BASE}/04_ssins.py" "$metafits" $raw_glob
 
 # DEMO: SSINS can also be used to generate RFI flag files, but this out of scope

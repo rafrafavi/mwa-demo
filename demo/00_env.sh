@@ -26,7 +26,7 @@ fi
 # - defaults to demo/data in the current working directory (^ unless Setonix)
 # - you may want to change this do a directory with more space if extending this demo
 export outdir=${outdir:-${PWD}/demo/data/}
-
+export obsid=1121334536
 # these variables can sometimes be set to a location inaccessible from Docker,
 # so we explicitly unset them here.
 unset srclist

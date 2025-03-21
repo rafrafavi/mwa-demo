@@ -19,25 +19,25 @@ docker run --rm -it -v ${outdir:=$PWD}:${outdir} -v $PWD:$PWD $([ -d /demo ] && 
 # --sigchain --no-diff --autos  = per-auto z-scores
 # --flags                       = flag occupancy
 
-from pyuvdata import UVData
-from SSINS import SS, INS, MF
 import os
-from os.path import splitext, dirname
-import matplotlib as mpl
-from matplotlib import pyplot as plt
-import numpy as np
-from astropy.time import Time
-from argparse import ArgumentParser, SUPPRESS
-from itertools import groupby
 import re
+import sys
 import time
 import traceback
+from argparse import SUPPRESS, ArgumentParser
+from itertools import groupby
+from os.path import dirname, splitext
 from pathlib import Path
-import pandas as pd
 from pprint import pformat
-import sys
 
+import matplotlib as mpl
+import numpy as np
+import pandas as pd
+from astropy.time import Time
+from matplotlib import pyplot as plt
 from matplotlib.axis import Axis
+from pyuvdata import UVData
+from SSINS import INS, MF, SS
 
 
 def get_parser():
@@ -78,7 +78,9 @@ def get_parser():
         help="Correct van vleck quantization artifacts in legacy correlator. slow!",
     )
     group_mutex = group_read.add_mutually_exclusive_group()
-    group_mutex.add_argument("--remove-flagged-ants", default=True, help=SUPPRESS)
+    group_mutex.add_argument(
+        "--remove-flagged-ants", default=True, help=SUPPRESS
+    )
     group_mutex.add_argument(
         "--include-flagged-ants",
         action="store_false",
@@ -242,10 +244,15 @@ def get_parser():
         type=str,
         help="additional text to add to plot output filename",
     )
-    group_plot.add_argument("--fontsize", default=8, help="plot tick label font size")
+    group_plot.add_argument(
+        "--fontsize", default=8, help="plot tick label font size"
+    )
 
     parser.add_argument(
-        "--export-tsv", default=False, action="store_true", help="export values to TSV"
+        "--export-tsv",
+        default=False,
+        action="store_true",
+        help="export values to TSV",
     )
 
     return parser
@@ -310,17 +317,25 @@ def get_unflagged_ants(ss: UVData, args):
     def sanitize(s: str):
         return s.upper().strip()
 
-    present_ant_names = np.array([*map(sanitize, all_ant_names[present_ant_mask])])
+    present_ant_names = np.array(
+        [*map(sanitize, all_ant_names[present_ant_mask])]
+    )
     assert len(present_ant_nums) == len(present_ant_names)
 
     if args.sel_ants:
         sel_ants = np.array([*map(sanitize, args.sel_ants)])
         if not set(present_ant_names).intersection(sel_ants):
-            print(f"no intersection between {sel_ants=} and {present_ant_names=}")
-        return present_ant_nums[np.where(np.isin(present_ant_names, sel_ants))[0]]
+            print(
+                f"no intersection between {sel_ants=} and {present_ant_names=}"
+            )
+        return present_ant_nums[
+            np.where(np.isin(present_ant_names, sel_ants))[0]
+        ]
     elif args.skip_ants:
         skip_ants = np.array([*map(sanitize, args.skip_ants)])
-        return present_ant_nums[np.where(~np.isin(present_ant_names, skip_ants))[0]]
+        return present_ant_nums[
+            np.where(~np.isin(present_ant_names, skip_ants))[0]
+        ]
 
     return present_ant_nums
 
@@ -432,7 +447,9 @@ def plot_sigchain(ss, args, obsname, suffix, cmap):
     for i, pol in enumerate(pols):
         # by signal chain: [ant, time]
         ax_signal: Axis = subplots[0, i]
-        ax_signal.set_title(f"{obsname} zscore{suffix} {pol if len(pols) > 1 else ''}")
+        ax_signal.set_title(
+            f"{obsname} zscore{suffix} {pol if len(pols) > 1 else ''}"
+        )
         if i == 0:
             ax_signal.yaxis.set_label("Antenna")
 
@@ -517,7 +534,9 @@ def plot_spectrum(ss, args, obsname, suffix, cmap):
 
         for a, (name, metric) in enumerate(ax_mets):
             ax: Axis = subplots[a, i]
-            ax.set_title(f"{obsname} {name}{suffix} {pol if len(pols) > 1 else ''}")
+            ax.set_title(
+                f"{obsname} {name}{suffix} {pol if len(pols) > 1 else ''}"
+            )
             ax.imshow(
                 metric,
                 aspect="auto",
@@ -558,7 +577,9 @@ def plot_flags(ss: UVData, args, obsname, suffix, cmap):
     freqs_mhz = (ss.freq_array) / 1e6
 
     occupancy = np.sum(
-        ss.flag_array.reshape(ss.Ntimes, ss.Nbls, ss.Nspws, ss.Nfreqs, len(pols)),
+        ss.flag_array.reshape(
+            ss.Ntimes, ss.Nbls, ss.Nspws, ss.Nfreqs, len(pols)
+        ),
         axis=(1, 2),
     ).astype(np.float64)
     full_occupancy_value = ss.Nbls * ss.Nspws
@@ -582,7 +603,9 @@ def plot_flags(ss: UVData, args, obsname, suffix, cmap):
     for i, pol in enumerate(pols):
         ax: Axis = subplots[i]
 
-        ax.set_title(f"{obsname} occupancy{suffix} {pol if len(pols) > 1 else ''}")
+        ax.set_title(
+            f"{obsname} occupancy{suffix} {pol if len(pols) > 1 else ''}"
+        )
         ax.imshow(
             occupancy[..., i],
             aspect="auto",
@@ -645,7 +668,13 @@ def read_raw(uvd: UVData, metafits, raw_fits, read_kwargs):
     if len(raw_fits) <= 1:
         uvd.read([metafits, *raw_fits], read_data=True, **read_kwargs)
         read_time = time.time() - start
+<<<<<<< Updated upstream
         print(f"read took {int(read_time)}s. {int(total_size_mb / read_time)} MB/s")
+=======
+        print(
+            f"read took {int(read_time)}s. {int(total_size_mb / read_time)} MB/s"
+        )
+>>>>>>> Stashed changes
         return uvd
 
     # group and read raw by channel to save memory
@@ -670,10 +699,19 @@ def read_raw(uvd: UVData, metafits, raw_fits, read_kwargs):
             uvd_ = type(uvd)()
 
         channel_raw_fits = raw_channel_groups[ch]
-        mwalib_channel_times = mwalib_get_common_times(metafits, channel_raw_fits, good)
+        mwalib_channel_times = mwalib_get_common_times(
+            metafits, channel_raw_fits, good
+        )
 
         compare_channel_times(
+<<<<<<< Updated upstream
             ch, times, mwalib_channel_times, (" mwalib good" if good else " mwalib")
+=======
+            ch,
+            times,
+            mwalib_channel_times,
+            (" mwalib good" if good else " mwalib"),
+>>>>>>> Stashed changes
         )
 
         channel_size_mb = sum([file_sizes_mb[f] for f in channel_raw_fits])
@@ -741,10 +779,14 @@ def read_select(uvd: UVData, args):
             raise UserWarning(f"multiple metafits supplied in {args.files}")
         metafits = file_groups[".metafits"][0]
         base, _ = splitext(metafits)
-        total_size_mb = sum(du_bs(Path(f)) for f in file_groups[".fits"] + [metafits])
+        total_size_mb = sum(
+            du_bs(Path(f)) for f in file_groups[".fits"] + [metafits]
+        )
         read_raw(uvd, metafits, file_groups[".fits"], read_kwargs)
     elif len(other_types) > 1:
-        raise UserWarning(f"multiple file types found ({[*other_types]}) {args.files}")
+        raise UserWarning(
+            f"multiple file types found ({[*other_types]}) {args.files}"
+        )
     elif len(other_types.intersection([".ms"])) == 1:
         vis = file_groups.get(".ms", [])
         base, _ = os.path.splitext(vis[0])
@@ -759,7 +801,13 @@ def read_select(uvd: UVData, args):
         uvd.read(vis, **read_kwargs)
         uvd.scan_number_array = None  # these are not handled correctly
         read_time = time.time() - start
+<<<<<<< Updated upstream
         print(f"read took {int(read_time)}s. {int(total_size_mb / read_time)} MB/s")
+=======
+        print(
+            f"read took {int(read_time)}s. {int(total_size_mb / read_time)} MB/s"
+        )
+>>>>>>> Stashed changes
     elif len(other_types.intersection([".uvfits", ".uvh5"])) == 1:
         vis = sum(
             [
@@ -775,16 +823,26 @@ def read_select(uvd: UVData, args):
         start = time.time()
         uvd.read(vis, read_data=True, **read_kwargs)
         read_time = time.time() - start
+<<<<<<< Updated upstream
         print(f"read took {int(read_time)}s. {int(total_size_mb / read_time)} MB/s")
+=======
+        print(
+            f"read took {int(read_time)}s. {int(total_size_mb / read_time)} MB/s"
+        )
+>>>>>>> Stashed changes
     else:
-        raise ValueError(f"could not determine visibility file type {file_groups}")
+        raise ValueError(
+            f"could not determine visibility file type {file_groups}"
+        )
 
     if args.sel_pols:
         select_kwargs["polarizations"] = args.sel_pols
     if args.freq_range:
         fmin, fmax = map(float, args.freq_range)
         select_kwargs["frequencies"] = uvd.freq_array[
-            np.where(np.logical_and(uvd.freq_array >= fmin, uvd.freq_array <= fmax))
+            np.where(
+                np.logical_and(uvd.freq_array >= fmin, uvd.freq_array <= fmax)
+            )
         ]
         if len(select_kwargs["frequencies"]) == 0:
             raise ValueError(
@@ -807,6 +865,7 @@ def read_select(uvd: UVData, args):
     return base
 
 
+@profile
 def main():
     parser = get_parser()
     args = parser.parse_args()
